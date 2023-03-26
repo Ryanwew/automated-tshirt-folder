@@ -34,6 +34,8 @@ void displayMenu() {
 }
 
 void displayOptions() {
+  lcd.clear();
+
   for (int i = 0; i < (sizeof(optionItems) / sizeof(optionItems[0])); i++) {
     lcd.setCursor(0, (i));
     if (i == currentOptionItem) {
@@ -76,24 +78,44 @@ void loop() {
     Serial.println("Button pressed");
     tone(3, 200, 250);
 
-    currentMenuItem++;
-    if (currentMenuItem >= (sizeof(menuItems) / sizeof(menuItems[0]))) {
-      currentMenuItem = 0;
-    }
     switch (currentFrame) {
       case 0:
+        currentMenuItem++;
+        if (currentMenuItem >= (sizeof(menuItems) / sizeof(menuItems[0]))) {
+          currentMenuItem = 0;
+        }
         displayMenu();
         break;
       case 1:
+        currentOptionItem++;
+        if (currentOptionItem >= (sizeof(optionItems) / sizeof(optionItems[0]))) {
+          currentOptionItem = 0;
+        }
         displayOptions();
         break;
       default:
         break; //maybe add an error screen here
+    }
   }
 
   if (selectButton.fell()) {
     tone(3, 400, 400);
+
+    switch (currentFrame) {
+      case 0:
+        switch (currentMenuItem) {
+          case 0:
+            break;
+          case 1:
+            currentFrame = 1;
+            displayOptions();
+        }
+        break;
+      case 1:
+        break;
+    }
   }
+
 }
-}
+
 
