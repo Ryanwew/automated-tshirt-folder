@@ -9,12 +9,17 @@ const int scrollButtonPin = 6;
 const int selectButtonPin = 5;
 
 String menuItems[] = {"Activate Fold", "Options"};
-String optionItems[] = {"Raise Arms", "Re-Home Arms", "Credits" "Back <"};
+String optionItems[] = {"Raise Arms", "Re-Home Arms", "Credits", "Back <"};
 
 int currentMenuItem = 0;
 int currentOptionItem = 0;
 
 int currentFrame = 0;
+
+int foldingProgress = 0;
+
+const long foldingInterval = 1000;
+long timeSinceFold = 0;
 
 Bounce scrollButton = Bounce(); // Instantiate a Bounce object
 Bounce selectButton = Bounce();
@@ -54,8 +59,6 @@ void displayMenu() {
 }
 
 void displayOptions() {
-  lcd.setCursor(0, 0);
-  
   lcd.clear();
 
   for (int i = 0; i < (sizeof(optionItems) / sizeof(optionItems[0])); i++) {
@@ -81,17 +84,106 @@ void displayCredits() {
 }
 
 void runFold() {
-  lcd.clear();
 
-  lcd.setCursor(0, 0);
-  lcd.print("Folding in Progress:");
-  lcd.setCursor(1, 1);
-  lcd.print("[");
-  lcd.setCursor(18, 1);
-  lcd.print("]");
+  if (foldingProgress > 10){
+      foldingProgress = 0;
+  }
 
-  lcd.setCursor(0, 3);
-  lcd.print("> Stop Fold");
+  switch (foldingProgress) {
+    
+    case 0:
+      lcd.clear();
+
+      lcd.setCursor(0, 0);
+      lcd.print("Folding in Progress:");
+      lcd.setCursor(1, 1);
+      lcd.print("[");
+      lcd.setCursor(18, 1);
+      lcd.print("]");
+      lcd.setCursor(0, 3);
+      lcd.print("> Stop Fold");
+
+      //ADD FOLDING STEP
+
+      timeSinceFold = millis();
+      foldingProgress++;
+      break;
+    case 1:
+
+      //ADD FOLDING STEP
+      timeSinceFold = millis();
+
+      lcd.setCursor(2, 1);
+      lcd.write(0);
+      lcd.write(0);
+       
+      foldingProgress++;
+      break;
+    case 2:
+      //ADD FOLDING STEP
+      timeSinceFold = millis();
+
+      lcd.write(0);
+      lcd.write(0);
+      lcd.write(0);
+       
+      foldingProgress++;
+      break;
+    case 3:
+
+      //ADD FOLDING STEP
+      timeSinceFold = millis();
+
+      lcd.write(0);
+      lcd.write(0);
+       
+      foldingProgress++;
+      break;
+    case 4:
+      //ADD FOLDING STEP
+      timeSinceFold = millis();
+
+      lcd.write(0);
+      lcd.write(0);
+      lcd.write(0);
+       
+      foldingProgress++;
+      break;
+    case 5:
+
+      //ADD FOLDING STEP
+      timeSinceFold = millis();
+
+      lcd.write(0);
+      lcd.write(0);
+       
+      foldingProgress++;
+      break;
+    case 6:
+      //ADD FOLDING STEP
+      timeSinceFold = millis();
+
+      lcd.write(0);
+      lcd.write(0);
+      lcd.write(0);
+       
+      foldingProgress++;
+      break;
+    case 7:
+      lcd.write(0);
+      timeSinceFold = 0;
+
+      tone(3, 500, 800);
+
+      delay(1250);
+       
+      foldingProgress = 0;
+      currentFrame = 0;
+      
+      displayMenu();
+      break;
+  }
+
 }
 
 void setup() {
@@ -123,6 +215,7 @@ void setup() {
 }
 
 void loop() {
+  Serial.println(foldingProgress);
   Wire.setClock(1000);
   // Update the Bounce instance
   scrollButton.update();
@@ -131,13 +224,12 @@ void loop() {
   // Check for a scrollButton press (when the scrollButton goes from HIGH to LOW)
   if (scrollButton.fell()) {
 
-    delay(250);
-
     // Add this line to print a message when the scrollButton is pressed
     tone(3, 200, 250);
 
     switch (currentFrame) {
       case 0:
+        delay(250);
         currentMenuItem++;
         if (currentMenuItem >= (sizeof(menuItems) / sizeof(menuItems[0]))) {
           currentMenuItem = 0;
@@ -145,6 +237,7 @@ void loop() {
         displayMenu();
         break;
       case 1:
+        delay(250);
         currentOptionItem++;
         if (currentOptionItem >= (sizeof(optionItems) / sizeof(optionItems[0]))) {
           currentOptionItem = 0;
@@ -157,13 +250,12 @@ void loop() {
   }
 
   if (selectButton.fell()) {
-    Serial.println("select pressed");
     tone(3, 400, 400);
-
-    delay(250);
 
     switch (currentFrame) {
       case 0:
+        delay(250);
+
         switch (currentMenuItem) {
           case 0:
             currentFrame = 3;
@@ -175,6 +267,8 @@ void loop() {
         }
         break;
       case 1:
+        delay(250);
+
         switch (currentOptionItem) {
           case 0:
             break;
@@ -189,17 +283,24 @@ void loop() {
         }
         break;
       case 2:
+        delay(250);
         currentFrame = 1;
         currentOptionItem = 0; 
         displayOptions();
         delay(1000);
         break;
       case 3:
+        foldingProgress = foldingProgress + 10;
         currentFrame = 0;
         currentMenuItem = 0; 
         displayMenu(); 
         break;
     }
+  }
+
+  if(foldingProgress > 0 && foldingProgress < 9 && ((millis() - timeSinceFold) > foldingInterval)) {
+    tone(3, 400, 80);
+    runFold();
   }
 
 }
