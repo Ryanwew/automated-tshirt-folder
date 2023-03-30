@@ -7,6 +7,9 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 const int scrollButtonPin = 6;
 const int selectButtonPin = 5;
+const int auxButtonPin = 10;
+
+const int blinkerPin = 11;
 
 String menuItems[] = {"Activate Fold", "Options"};
 String optionItems[] = {"Raise Arms", "Re-Home Arms", "Credits", "Back <"};
@@ -18,15 +21,23 @@ int currentFrame = 0;
 
 int foldingProgress = 0;
 
-const long foldingInterval = 1000;
+int ledBlink = 0;
+
+const long blinkingInterval = 500;
+long timeSinceBlink = 0;
+
+const long foldingInterval = 1500;
 long timeSinceFold = 0;
 
 Bounce scrollButton = Bounce(); // Instantiate a Bounce object
 Bounce selectButton = Bounce();
+Bounce auxButton = Bounce ();
 
 Servo leftArm;
 Servo rightArm;
 Servo centerArm; 
+
+int servoProgress = 180;
 
 byte Progress[] = {
   B11111,
@@ -43,7 +54,7 @@ void displayMenu() {
   lcd.clear();
 
   lcd.setCursor(0, 0);
-  lcd.print("Foldamatics v0.1");
+  lcd.print("Foldamatics v0.2");
 
   for (int i = 0; i < (sizeof(menuItems) / sizeof(menuItems[0])); i++) {
     delay(10);
@@ -190,6 +201,8 @@ void setup() {
   delay(1000);
   Wire.setClock(1000);
 
+  leftArm.write(0);
+
   lcd.createChar(0, Progress);
   
   leftArm.attach(7);
@@ -199,6 +212,9 @@ void setup() {
   lcd.clear();
   pinMode(scrollButtonPin, INPUT_PULLUP);
   pinMode(selectButtonPin, INPUT_PULLUP);
+  pinMode(auxButtonPin, INPUT_PULLUP);
+
+  pinMode (blinkerPin, OUTPUT);
 
   // Add this line to enable serial communication
   Serial.begin(9600);
@@ -212,14 +228,26 @@ void setup() {
 
   selectButton.attach(selectButtonPin);
   selectButton.interval(100);
+
+  auxButton.attach(auxButtonPin);
+  auxButton.interval(40);
 }
 
 void loop() {
   Serial.println(foldingProgress);
   Wire.setClock(1000);
+
+  leftArm.write(servoProgress);
+
   // Update the Bounce instance
   scrollButton.update();
   selectButton.update();
+  auxButton.update();
+
+  if (auxButton.fell()) {
+    currentFrame = 3;
+    runFold();  
+  }
 
   // Check for a scrollButton press (when the scrollButton goes from HIGH to LOW)
   if (scrollButton.fell()) {
@@ -268,9 +296,12 @@ void loop() {
         break;
       case 1:
         delay(250);
-
         switch (currentOptionItem) {
           case 0:
+            servoProgress += 10;
+            break;
+          case 1:
+            servoProgress -= 10;
             break;
           case 2:
             currentFrame = 2;
@@ -301,6 +332,20 @@ void loop() {
   if(foldingProgress > 0 && foldingProgress < 9 && ((millis() - timeSinceFold) > foldingInterval)) {
     tone(3, 400, 80);
     runFold();
+  }
+
+  if(foldingProgress > 0 && foldingProgress < 9 && ((millis() - timeSinceBlink) > blinkingInterval)) {
+    if (ledBlink) {
+      digitalWrite(blinkerPin, HIGH);
+    }
+    else {
+      digitalWrite(blinkerPin, LOW);
+    }
+
+    ledBlink = !ledBlink;
+  } 
+  else if (foldingProgress == 0) {
+    digitalWrite(blinkerPin, HIGH);  
   }
 
 }
