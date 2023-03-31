@@ -5,17 +5,21 @@
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-const int scrollButtonPin = 6;
+const int scrollButtonPin = 11;
 const int selectButtonPin = 5;
 const int auxButtonPin = 12;
 
 String menuItems[] = {"Activate Fold", "Options"};
-String optionItems[] = {"Raise Arms", "Re-Home Arms", "Credits", "Back <"};
+String optionItems[] = {"Re-Home Arms", "Credits", "Back <"};
 
 int currentMenuItem = 0;
 int currentOptionItem = 0;
 
 int currentFrame = 0;
+
+int LAV = 21;
+int CAV = 65; //(x arm value) zero position for each arm
+int RAV = 36;
 
 int foldingProgress = 0;
 
@@ -81,6 +85,10 @@ void displayCredits() {
   lcd.setCursor(0, 0);
   lcd.print("Ryan Dick");
   delay(10);
+  lcd.setCursor(0, 1);
+  lcd.print("Jordan Malench");
+  lcd.setCursor(0, 2);
+  lcd.print("Rabih Daoud");
   lcd.setCursor(0, 3);
   lcd.print("> Back");
 }
@@ -122,7 +130,7 @@ void runFold() {
       foldingProgress++;
       break;
     case 2:
-      leftArm.write(21);
+      leftArm.write(LAV);
 
       timeSinceFold = millis();
 
@@ -142,7 +150,7 @@ void runFold() {
       foldingProgress++;
       break;
     case 4:
-      rightArm.write(36);
+      rightArm.write(RAV);
       timeSinceFold = millis();
 
       lcd.write(0);
@@ -161,7 +169,7 @@ void runFold() {
       foldingProgress++;
       break;
     case 6:
-      centerArm.write(65);
+      centerArm.write(CAV);
       timeSinceFold = millis();
 
       lcd.write(0);
@@ -197,9 +205,9 @@ void setup() {
   rightArm.attach(8);
   centerArm.attach(9);
 
-  leftArm.write(21);
-  centerArm.write(65);
-  rightArm.write(36);
+  leftArm.write(LAV);
+  centerArm.write(CAV);
+  rightArm.write(RAV);
 
   lcd.clear();
   pinMode(scrollButtonPin, INPUT_PULLUP);
@@ -286,14 +294,22 @@ void loop() {
         delay(250);
         switch (currentOptionItem) {
           case 0:
+              leftArm.write(LAV+20);
+              delay(900);
+              leftArm.write(LAV);
+              centerArm.write(CAV+20);
+              delay(1500);
+              centerArm.write(CAV);
+              rightArm.write(RAV+20);
+              delay(1500);
+              rightArm.write(RAV);
+              delay(500);
             break;
           case 1:
-            break;
-          case 2:
             currentFrame = 2;
             displayCredits();
             break;
-          case 3:
+          case 2:
             currentFrame = 0;
             currentMenuItem = 0; 
             displayMenu();
